@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISE AI - Plant Disease Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #8bc34a 0%, #4caf50 100%); /* Green gradient for agriculture */
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e); /* Gold/yellow for "RISE" */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .code-section {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .demo-section {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); /* Lighter green for demo */
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-group input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            background-color: #f0f0f0;
+        }
+
+        .input-group input[type="file"]:focus {
+            outline: none;
+            border-color: #8bc34a;
+            box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #8bc34a 0%, #4caf50 100%); /* Green button */
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .result {
+            background: #f8f9fa;
+            border-left: 4px solid #8bc34a; /* Green border for result */
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .prediction-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .prediction-healthy { background: #28a745; color: white; } /* Green for healthy */
+        .prediction-diseased { background: #dc3545; color: white; } /* Red for diseased */
+        .prediction-unknown { background: #6c757d; color: white; } /* Gray for unknown */
+
+        .lightning-effect {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lightning-effect::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: lightning 3s infinite;
+        }
+
+        @keyframes lightning {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white; /* Text color for features */
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .author-info {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #4caf50; /* Active tab green */
+            border-bottom-color: #4caf50;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8bc34a, #4caf50); /* Green progress bar */
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        #imagePreview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header lightning-effect">
+            <h1>🌟 RISE AI</h1>
+            <p>Plant Disease Detection Using CNN</p>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('demo')">Live Demo</button>
+                <button class="tab" onclick="showTab('code')">Complete Code</button>
+                <button class="tab" onclick="showTab('features')">Features & Objective</button>
+                <button class="tab" onclick="showTab('requirements')">Requirements & Setup</button>
+            </div>
+
+            <div id="demo" class="tab-content active">
+                <div class="demo-section">
+                    <h2>🎯 Live Plant Disease Detection Demo</h2>
+                    <div class="input-group">
+                        <label for="imageUpload">Upload a plant leaf image:</label>
+                        <input type="file" id="imageUpload" accept="image/*" onchange="previewImage()">
+                        <img id="imagePreview" src="#" alt="Image Preview">
+                    </div>
+                    <button class="btn" onclick="analyzeImage()">Analyze Image</button>
+                    <div id="result" class="result" style="display:none;">
+                        <h3>Analysis Result:</h3>
+                        <div id="predictionResult"></div>
+                        <div id="confidenceBar"></div>
+                        <div id="advice"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="code" class="tab-content">
+                <h2>💻 Complete Python Code (Plant Disease Detection)</h2>
+                <div class="code-section">
+<pre>
+# Project 8: Plant Disease Detection Using CNN
+# Author: Jyoti Kumar (jknewcar25@gmail.com)
+# Objective: Train a CNN model to classify plant leaf images as healthy or diseased.
+
+import tensorflow as tf
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, BatchNormalization, Input, GlobalAveragePooling2D
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.applications import ResNet50 # Example for transfer learning
+from sklearn.metrics import classification_report, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import os
+import warnings
+warnings.filterwarnings('ignore')
+
+# --- Configuration ---
+IMG_HEIGHT = 224
+IMG_WIDTH = 224
+BATCH_SIZE = 32
+NUM_CLASSES = 38 # Example for PlantVillage dataset; adjust based on your dataset
+DATA_DIR = 'path/to/PlantVillage' # **IMPORTANT: Change this to your dataset path**
+
+# --- 1. Data Acquisition & Understanding (Conceptual) ---
+# In a real script, you'd ensure DATA_DIR points to your downloaded dataset.
+# E.g., if you downloaded PlantVillage and unzipped it, DATA_DIR would be the parent folder
+# containing subfolders like 'Apple___healthy', 'Tomato___Bacterial_spot', etc.
+# Check your dataset's structure to determine NUM_CLASSES.
+
+# --- 2. Image Preprocessing and Data Augmentation ---
+print("Setting up ImageDataGenerators...")
+train_datagen = ImageDataGenerator(
+    rescale=1./255,          # Normalize pixel values
+    rotation_range=40,       # Random rotations
+    width_shift_range=0.2,   # Random horizontal shifts
+    height_shift_range=0.2,  # Random vertical shifts
+    shear_range=0.2,         # Shear transformations
+    zoom_range=0.2,          # Random zoom
+    horizontal_flip=True,    # Random horizontal flips
+    fill_mode='nearest',     # Fill newly created pixels
+    validation_split=0.2     # 20% of data for validation
+)
+
+# Create generators for training and validation data
+# Ensure your DATA_DIR has subdirectories for each class
+train_generator = train_datagen.flow_from_directory(
+    DATA_DIR,
+    target_size=(IMG_HEIGHT, IMG_WIDTH),
+    batch_size=BATCH_SIZE,
+    class_mode='categorical', # Use 'categorical' for multi-class classification
+    subset='training',
+    seed=42 # for reproducibility
+)
+
+validation_generator = train_datagen.flow_from_directory(
+    DATA_DIR,
+    target_size=(IMG_HEIGHT, IMG_WIDTH),
+    batch_size=BATCH_SIZE,
+    class_mode='categorical',
+    subset='validation',
+    seed=42 # for reproducibility
+)
+
+# Get class names (labels)
+class_names = list(train_generator.class_indices.keys())
+NUM_CLASSES = len(class_names)
+print(f"Detected {NUM_CLASSES} classes: {class_names}")
+
+# --- 3. Building the CNN Model (Choose one: Simple CNN or Transfer Learning) ---
+
+# Option A: Simple CNN Architecture
+def build_simple_cnn_model():
+    model = Sequential([
+        Conv2D(32, (3, 3), activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
+
+        Conv2D(64, (3, 3), activation='relu'),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
+
+        Conv2D(128, (3, 3), activation='relu'),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
+
+        Conv2D(256, (3, 3), activation='relu'),
+        BatchNormalization(),
+        MaxPooling2D((2, 2)),
+
+        Flatten(),
+        Dense(512, activation='relu'),
+        Dropout(0.5), # Add dropout for regularization
+        Dense(NUM_CLASSES, activation='softmax') # Output layer
+    ])
+    return model
+
+# Option B: Transfer Learning with ResNet50 (Recommended for better performance)
+def build_transfer_learning_model():
+    # Load pre-trained ResNet50 model without top (fully connected) layers
+    base_model = ResNet50(weights='imagenet', include_top=False, input_tensor=Input(shape=(IMG_HEIGHT, IMG_WIDTH, 3)))
+
+    # Freeze the base model layers
+    for layer in base_model.layers:
+        layer.trainable = False
+
+    # Add custom top layers for your classification task
+    x = base_model.output
+    x = GlobalAveragePooling2D()(x) # A common layer after ConvNet for classification
+    x = Dense(512, activation='relu')(x)
+    x = Dropout(0.5)(x)
+    predictions = Dense(NUM_CLASSES, activation='softmax')(x)
+
+    model = Model(inputs=base_model.input, outputs=predictions)
+    return model
+
+# Choose which model to build
+model = build_transfer_learning_model() # Or build_simple_cnn_model()
+
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+model.summary()
+
+# --- 4. Training the Model ---
+print("\nTraining the model...")
+# Callbacks
+checkpoint = ModelCheckpoint('best_plant_disease_model.h5', # Model will be saved here
+                             monitor='val_accuracy',
+                             save_best_only=True,
+                             mode='max',
+                             verbose=1)
+
+early_stopping = EarlyStopping(monitor='val_loss',
+                               patience=10, # Number of epochs with no improvement
+                               restore_best_weights=True,
+                               verbose=1)
+
+# Fit the model
+# Consider increasing epochs if your dataset is large and training is slow.
+# Adjust steps_per_epoch and validation_steps if your generator is not exhausting data well.
+history = model.fit(
+    train_generator,
+    epochs=50, # Can be higher, EarlyStopping will manage
+    validation_data=validation_generator,
+    callbacks=[checkpoint, early_stopping]
+)
+
+# --- 5. Model Evaluation ---
+print("\nEvaluating the model...")
+# Load the best model saved by the checkpoint
+best_model = tf.keras.models.load_model('best_plant_disease_model.h5')
+
+# Evaluate on validation data (or a separate test generator if available)
+val_loss, val_accuracy = best_model.evaluate(validation_generator)
+print(f"\nValidation Loss: {val_loss:.4f}")
+print(f"Validation Accuracy: {val_accuracy:.4f}")
+
+# Plotting training history
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Model Accuracy Over Epochs')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Model Loss Over Epochs')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+# Classification Report and Confusion Matrix
+print("\nGenerating Classification Report and Confusion Matrix...")
+# To get predictions for the report, iterate through the generator without shuffling
+validation_generator.reset() # Reset to get predictions in order
+Y_pred = best_model.predict(validation_generator)
+y_pred_classes = np.argmax(Y_pred, axis=1)
+y_true = validation_generator.classes[validation_generator.index_array] # Get true labels for validation subset
+
+print("\nClassification Report:")
+print(classification_report(y_true, y_pred_classes, target_names=class_names))
+
+# Confusion Matrix
+cm = confusion_matrix(y_true, y_pred_classes)
+plt.figure(figsize=(20, 18)) # Adjust size for better readability with many classes
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
+plt.title('Confusion Matrix')
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.tight_layout()
+plt.show()
+
+# --- 6. Prediction Function (Example) ---
+def predict_plant_disease(image_path, model, class_names, img_height, img_width):
+    img = tf.keras.preprocessing.image.load_img(image_path, target_size=(img_height, img_width))
+    img_array = tf.keras.preprocessing.image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0) # Create a batch
+    img_array = img_array / 255.0 # Normalize
+
+    predictions = model.predict(img_array)
+    predicted_class_index = np.argmax(predictions[0])
+    confidence = np.max(predictions[0])
+
+    predicted_class_name = class_names[predicted_class_index]
+
+    return predicted_class_name, confidence
+
+# Example usage (you would replace 'path/to/your/image.jpg' with an actual image)
+# if os.path.exists('path/to/your/image.jpg'):
+#     predicted_class, confidence = predict_plant_disease('path/to/your/image.jpg', best_model, class_names, IMG_HEIGHT, IMG_WIDTH)
+#     print(f"\nPrediction for 'path/to/your/image.jpg': {predicted_class} (Confidence: {confidence:.2f})")
+# else:
+#     print("\nExample image path not found. Please provide a valid image path to test the prediction function.")
+
+print("\n--- Plant Disease Detection Project Complete! ---")
+print("For any questions, contact Jyoti Kumar at jknewcar25@gmail.com")
+
+</pre>
+                </div>
+            </div>
+
+            <div id="features" class="tab-content">
+                <h2>🚀 Features & Objectives</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🌿</div>
+                        <h3>Early Disease Detection</h3>
+                        <p>Identifies plant diseases from leaf photos at an early stage for timely intervention.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🧠</div>
+                        <h3>Deep Learning Powered</h3>
+                        <p>Utilizes Convolutional Neural Networks (CNNs) for robust image classification.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Image Preprocessing & Augmentation</h3>
+                        <p>Includes techniques to prepare and expand image datasets for effective model training.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>Transfer Learning Capability</h3>
+                        <p>Supports leveraging powerful pre-trained models (like ResNet50) for enhanced accuracy.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <h3>Mobile-Friendly Approach</h3>
+                        <p>Designed to support mobile photo analysis, making it accessible to farmers.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3>Performance Evaluation</h3>
+                        <p>Provides metrics like accuracy, precision, recall, and confusion matrices for model assessment.</p>
+                    </div>
+                </div>
+                <h3>🎯 Project Objectives:</h3>
+                <ul style="margin: 20px 0; padding-left: 30px; color: #555;">
+                    <li>Train a CNN model to classify plant leaf images as healthy or diseased.</li>
+                    <li>Develop an AI-powered visual disease detector.</li>
+                    <li>Align with agriculture and rural tech awareness goals to empower farmers.</li>
+                </ul>
+            </div>
+
+            <div id="requirements" class="tab-content">
+                <h2>📋 Requirements & Setup Guide</h2>
+                <div class="code-section">
+<pre>
+# --- 1. Dataset Acquisition ---
+# Recommended: PlantVillage Dataset
+# Download from Kaggle: https://www.kaggle.com/datasets/arjuntejaswi/plant-village-dataset
+# Or search for "PlantVillage dataset" online.
+# Unzip the dataset and note its path. Update 'DATA_DIR' in the Python code.
+
+# --- 2. Environment Setup (Python Libraries) ---
+# Install necessary libraries using pip:
+pip install tensorflow numpy matplotlib scikit-learn pillow seaborn opencv-python-headless
+
+# For optional deployment with Streamlit:
+pip install streamlit
+
+# --- 3. Hardware Requirements ---
+# GPU (Graphics Processing Unit) is HIGHLY RECOMMENDED for training CNNs.
+# - If you have a local NVIDIA GPU, ensure CUDA and cuDNN are installed correctly.
+# - Otherwise, consider using free cloud GPU platforms like Google Colab or Kaggle Kernels.
+# CPU-only training can be very slow for this project.
+
+# --- 4. Python Environment ---
+# Python 3.7+ is recommended.
+
+# --- 5. Project Workflow ---
+# 1. Download the PlantVillage dataset.
+# 2. Update the 'DATA_DIR' variable in the Python code to point to your dataset's root.
+# 3. Choose between 'build_simple_cnn_model()' or 'build_transfer_learning_model()'
+#    (Transfer Learning is recommended for better results).
+# 4. Run the Python script to train the model. It will save 'best_plant_disease_model.h5'.
+# 5. Review the evaluation plots and reports generated by the script.
+# 6. (Optional) Create an 'app.py' for Streamlit deployment and run it.
+
+</pre>
+                </div>
+                <h3>🔑 Expected Outcomes:</h3>
+                <ul style="margin: 20px 0; padding-left: 30px; color: #555;">
+                    <li>A trained CNN model (`.h5` file) capable of classifying plant leaf images.</li>
+                    <li>Performance metrics (accuracy, loss, classification report, confusion matrix) demonstrating model effectiveness.</li>
+                    <li>(Optional) A functional Streamlit web application for real-time disease detection.</li>
+                    <li>A deeper understanding of CNNs, image preprocessing, and transfer learning in agricultural AI.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="author-info">
+            <h3>👨‍💻 Project Information</h3>
+            <p><strong>Project:</strong> Plant Disease Detection Using CNN</p>
+            <p><strong>Author:</strong> Jyoti Kumar</p>
+            <p><strong>Contact:</strong> jknewcar25@gmail.com</p>
+            <p><strong>Objective:</strong> AI-powered visual disease detector for agriculture and rural tech awareness</p>
+            <p><strong>Target:</strong> Farmers & Agricultural Technology Platforms (aligned with RISE AI goals)</p>
+        </div>
+    </div>
+
+    <script>
+        // --- JavaScript for Live Demo (Simulated Prediction) ---
+        // This JS simulates disease detection for demonstration purposes.
+        // A real deployment would send the image to a Python backend for CNN inference.
+
+        const diseaseKeywords = {
+            'Apple - Apple Scab': ['spot', 'scab', 'dark', 'lesion'],
+            'Tomato - Early Blight': ['concentric', 'rings', 'spot', 'dry'],
+            'Potato - Late Blight': ['water-soaked', 'spot', 'mold', 'rot'],
+            'Corn - Common Rust': ['pustules', 'orange', 'rust', 'powdery'],
+            'Peach - Bacterial Spot': ['spot', 'gummy', 'lesion', 'hole'],
+            'Healthy': ['healthy', 'green', 'fresh', 'no disease', 'clean']
+        };
+
+        const predictionColors = {
+            'healthy': 'prediction-healthy',
+            'diseased': 'prediction-diseased',
+            'unknown': 'prediction-unknown'
+        };
+
+        const diseaseAdvice = {
+            'Apple - Apple Scab': "Apple Scab is a fungal disease. Remove infected leaves, prune for air circulation, and consider fungicide application. Consult local agricultural extension for best practices.",
+            'Tomato - Early Blight': "Early Blight on tomatoes. Practice crop rotation, ensure good air circulation, and apply fungicides as recommended. Remove lower infected leaves.",
+            'Potato - Late Blight': "Late Blight is serious. Immediately remove and destroy infected plants. Fungicide application is crucial to prevent spread. This can devastate crops quickly.",
+            'Corn - Common Rust': "Common Rust in corn. Plant resistant varieties. Fungicides can be used if severe. Ensure good air circulation.",
+            'Peach - Bacterial Spot': "Bacterial Spot on peaches. Practice good orchard sanitation. Copper-based sprays can help manage the disease, but prevention is key.",
+            'Healthy': "Your plant appears healthy! Continue good cultural practices like proper watering, nutrition, and pest monitoring to maintain its health.",
+            'Unknown': "Could not confidently identify the disease. Please ensure the leaf is clearly visible and well-lit. For accurate diagnosis, consult an agricultural expert."
+        };
+
+        function previewImage() {
+            const fileInput = document.getElementById('imageUpload');
+            const imagePreview = document.getElementById('imagePreview');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    document.getElementById('result').style.display = 'none'; // Hide previous results
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.src = '#';
+                imagePreview.style.display = 'none';
+            }
+        }
+
+        function analyzeImage() {
+            const imagePreview = document.getElementById('imagePreview');
+            const predictionResultDiv = document.getElementById('predictionResult');
+            const confidenceBarDiv = document.getElementById('confidenceBar');
+            const adviceDiv = document.getElementById('advice');
+            const resultSection = document.getElementById('result');
+
+            if (imagePreview.style.display === 'none' || imagePreview.src === '#') {
+                alert("Please upload an image first!");
+                return;
+            }
+
+            // Simulate prediction based on a simplified logic (for demo only)
+            // In a real application, you'd send the image data to your Python backend
+            // For this demo, we'll just check if the image has certain visual characteristics
+            // (e.g., if it's generally green or has spots).
+            // This is a placeholder for the actual CNN model's output.
+
+            let predictedClass = 'Unknown';
+            let confidence = 0.65; // Default confidence for unknown
+
+            // Simple "visual" cues from image dimensions / presence (highly simplified!)
+            // In a real scenario, you'd be analyzing pixel data or feature maps.
+            const imgWidth = imagePreview.naturalWidth;
+            const imgHeight = imagePreview.naturalHeight;
+
+            if (imgWidth > 0 && imgHeight > 0) {
+                // Simulate some common disease characteristics for a basic demo
+                // This is NOT using actual image analysis but just a placeholder
+                if (Math.random() < 0.2) { // 20% chance of healthy
+                    predictedClass = 'Healthy';
+                    confidence = 0.95 + Math.random() * 0.04; // High confidence
+                } else if (Math.random() < 0.6) { // 60% chance of a specific disease type
+                    const diseases = Object.keys(diseaseKeywords).filter(d => d !== 'Healthy');
+                    predictedClass = diseases[Math.floor(Math.random() * diseases.length)];
+                    confidence = 0.75 + Math.random() * 0.2; // Medium-high confidence
+                } else { // Remaining 20% unknown/other disease
+                    predictedClass = 'Other Disease / Complex Symptoms';
+                    confidence = 0.5 + Math.random() * 0.2;
+                }
+            } else {
+                 predictedClass = 'Unknown';
+                 confidence = 0.5;
+            }
+
+            let predictionDisplayClass = 'prediction-unknown';
+            if (predictedClass === 'Healthy') {
+                predictionDisplayClass = 'prediction-healthy';
+            } else if (predictedClass.includes('Disease') || predictedClass.includes('Spot') || predictedClass.includes('Blight') || predictedClass.includes('Rust')) {
+                predictionDisplayClass = 'prediction-diseased';
+            }
+
+            predictionResultDiv.innerHTML = `Predicted: <span class="prediction-badge ${predictionDisplayClass}">${predictedClass}</span> (Confidence: ${(confidence * 100).toFixed(1)}%)`;
+            confidenceBarDiv.innerHTML = `<div class="progress-bar"><div class="progress-fill" style="width: ${confidence * 100}%;"></div></div>`;
+            adviceDiv.innerHTML = `<p>${diseaseAdvice[predictedClass] || diseaseAdvice['Unknown']}</p>`;
+            resultSection.style.display = 'block';
+        }
+
+        function showTab(tabId) {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Initialize with demo tab active
+        document.addEventListener('DOMContentLoaded', () => {
+            showTab('demo');
+        });
+    </script>
+</body>
+</html>

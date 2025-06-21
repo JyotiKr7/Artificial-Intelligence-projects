@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Eligibility Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary-color: #3a7bd5;
+            --secondary-color: #00d2ff;
+            --success-color: #38ef7d;
+            --danger-color: #f857a6;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background-size: 200% auto;
+            animation: gradientBG 8s ease infinite;
+        }
+        
+        @keyframes gradientBG {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            transition: all 0.4s ease;
+            border: none;
+            overflow: hidden;
+            background: rgba(255,255,255,0.9);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px;
+            border-bottom: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.4s ease;
+            box-shadow: 0 4px 15px rgba(58, 123, 213, 0.3);
+            background-size: 200% auto;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(58, 123, 213, 0.4);
+            background-position: right center;
+        }
+        
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+        
+        .result-card {
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .result-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .result-card.approved {
+            border-left: 6px solid var(--success-color);
+        }
+        
+        .result-card.rejected {
+            border-left: 6px solid var(--danger-color);
+        }
+        
+        .progress {
+            height: 30px;
+            margin-bottom: 25px;
+            border-radius: 50px;
+            background: rgba(0,0,0,0.05);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .progress-bar {
+            border-radius: 50px;
+            transition: width 1.5s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .feature-importance {
+            margin-top: 30px;
+            background: rgba(255,255,255,0.7);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .sidebar {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: all 0.4s ease;
+        }
+        
+        .sidebar:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(58, 123, 213, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .application-image {
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            transition: all 0.5s ease;
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+        }
+        
+        .application-image:hover {
+            transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {box-shadow: 0 0 0 0 rgba(58, 123, 213, 0.7);}
+            70% {box-shadow: 0 0 0 15px rgba(58, 123, 213, 0);}
+            100% {box-shadow: 0 0 0 0 rgba(58, 123, 213, 0);}
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% {transform: translateY(0px);}
+            50% {transform: translateY(-10px);}
+            100% {transform: translateY(0px);}
+        }
+    </style>
+</head>
+<body>
+    <div class="header text-center animate__animated animate__fadeInDown">
+        <h1 class="animate__animated animate__fadeIn">Loan Eligibility Predictor</h1>
+        <p class="lead animate__animated animate__fadeIn animate__delay-1s">Check your loan approval chances instantly</p>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card animate__animated animate__fadeInLeft animate__delay-1s">
+                    <div class="card-header">
+                        <h3>Applicant Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <form id="loanForm">
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="age" class="form-label">Age</label>
+                                    <input type="number" class="form-control" id="age" min="18" max="100" value="30" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="income" class="form-label">Annual Income ($)</label>
+                                    <input type="number" class="form-control" id="income" min="0" value="50000" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="education" class="form-label">Education Level</label>
+                                    <select class="form-select" id="education" required>
+                                        <option value="High School">High School</option>
+                                        <option value="Bachelor" selected>Bachelor</option>
+                                        <option value="Master">Master</option>
+                                        <option value="PhD">PhD</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="employment" class="form-label">Years of Employment</label>
+                                    <input type="number" class="form-control" id="employment" min="0" max="50" value="5" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="creditScore" class="form-label">Credit Score</label>
+                                    <input type="number" class="form-control" id="creditScore" min="300" max="850" value="700" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="loanAmount" class="form-label">Loan Amount ($)</label>
+                                    <input type="number" class="form-control" id="loanAmount" min="1000" value="20000" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="existingDebt" class="form-label">Existing Debt ($)</label>
+                                    <input type="number" class="form-control" id="existingDebt" min="0" value="5000" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="modelType" class="form-label">Prediction Model</label>
+                                    <select class="form-select" id="modelType">
+                                        <option value="logistic">Logistic Regression</option>
+                                        <option value="randomforest">Random Forest</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg pulse">
+                                    <i class="fas fa-calculator me-2"></i> Predict Loan Eligibility
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="resultCard" class="card result-card">
+                    <div class="card-header">
+                        <h3>Prediction Results</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="resultMessage" class="text-center mb-4">
+                            <h2 id="approvalStatus" class="display-5"></h2>
+                            <p class="lead" id="approvalProbability"></p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="fw-bold mb-2">Approval Probability</label>
+                            <div class="progress">
+                                <div id="probabilityBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div class="feature-importance">
+                            <h4 class="mb-4">Key Decision Factors</h4>
+                            <div id="importanceChart" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="sidebar animate__animated animate__fadeInRight animate__delay-1s">
+                    <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80" 
+                         alt="Loan Application" 
+                         class="application-image floating">
+                    
+                    <h4 class="mb-3">Instructions</h4>
+                    <ol class="list-group list-group-numbered">
+                        <li class="list-group-item d-flex align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Fill details</div>
+                                Complete all applicant information
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Select model</div>
+                                Choose prediction algorithm
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Get prediction</div>
+                                Click the predict button
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">View results</div>
+                                See approval probability
+                            </div>
+                        </li>
+                    </ol>
+
+                    <hr class="my-4">
+
+                    <h4 class="mb-3">About</h4>
+                    <p>This loan eligibility predictor uses machine learning models to assess your loan application based on financial and personal information.</p>
+                    <p>The system evaluates multiple factors including income, credit score, existing debt, and education level.</p>
+
+                    <div class="alert alert-info mt-4 animate__animated animate__pulse animate__infinite">
+                        <strong><i class="fas fa-info-circle me-2"></i>Note:</strong> This is a demonstration tool. Actual loan decisions may involve additional factors.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Font Awesome -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation for form elements
+            const formElements = document.querySelectorAll('#loanForm input, #loanForm select');
+            formElements.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = `all 0.5s ease ${index * 0.1}s`;
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, 100);
+            });
+        });
+
+        document.getElementById('loanForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitBtn = document.querySelector('#loanForm button[type="submit"]');
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing...';
+            submitBtn.disabled = true;
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                simulatePrediction();
+                submitBtn.innerHTML = '<i class="fas fa-calculator me-2"></i> Predict Loan Eligibility';
+                submitBtn.disabled = false;
+            }, 1500);
+        });
+
+        function simulatePrediction() {
+            // Get form values
+            const age = parseInt(document.getElementById('age').value);
+            const income = parseInt(document.getElementById('income').value);
+            const education = document.getElementById('education').value;
+            const employment = parseInt(document.getElementById('employment').value);
+            const creditScore = parseInt(document.getElementById('creditScore').value);
+            const loanAmount = parseInt(document.getElementById('loanAmount').value);
+            const existingDebt = parseInt(document.getElementById('existingDebt').value);
+            const modelType = document.getElementById('modelType').value;
+
+            // Calculate debt-to-income ratio
+            const debtToIncome = existingDebt / (income || 1);
+            
+            // Mock prediction logic
+            let approvalProbability = 0.7; // Base probability
+            
+            // Adjust based on inputs
+            if (creditScore > 750) approvalProbability += 0.2;
+            else if (creditScore > 700) approvalProbability += 0.15;
+            else if (creditScore < 600) approvalProbability -= 0.25;
+            else if (creditScore < 500) approvalProbability -= 0.35;
+            
+            if (income > 100000) approvalProbability += 0.15;
+            else if (income > 80000) approvalProbability += 0.1;
+            else if (income < 30000) approvalProbability -= 0.2;
+            
+            if (debtToIncome > 0.5) approvalProbability -= 0.25;
+            else if (debtToIncome > 0.3) approvalProbability -= 0.15;
+            
+            if (education === 'PhD') approvalProbability += 0.1;
+            else if (education === 'Master') approvalProbability += 0.07;
+            else if (education === 'High School') approvalProbability -= 0.05;
+            
+            if (employment > 5) approvalProbability += 0.05;
+            else if (employment < 2) approvalProbability -= 0.1;
+            
+            if (age > 60) approvalProbability -= 0.1;
+            else if (age < 25) approvalProbability -= 0.05;
+            
+            // Model-specific adjustments
+            if (modelType === 'randomforest') {
+                // Random Forest tends to be more conservative with high loan amounts
+                if (loanAmount > income * 0.5) approvalProbability *= 0.8;
+            } else {
+                // Logistic Regression is more sensitive to credit score
+                approvalProbability *= (1 + (creditScore - 650) / 1000);
+            }
+            
+            // Cap between 0 and 1
+            approvalProbability = Math.max(0.05, Math.min(0.95, approvalProbability));
+            
+            // Display results
+            displayResults(approvalProbability);
+            
+            // Show feature importance
+            showFeatureImportance(age, income, education, employment, creditScore, loanAmount, existingDebt, modelType);
+        }
+
+        function displayResults(probability) {
+            const resultCard = document.getElementById('resultCard');
+            const approvalStatus = document.getElementById('approvalStatus');
+            const approvalProbability = document.getElementById('approvalProbability');
+            const probabilityBar = document.getElementById('probabilityBar');
+            
+            // Set probability bar
+            const percent = Math.round(probability * 100);
+            probabilityBar.style.width = `${percent}%`;
+            probabilityBar.textContent = `${percent}%`;
+            
+            // Set colors based on probability
+            if (percent > 75) {
+                probabilityBar.className = 'progress-bar bg-success';
+                approvalStatus.className = 'text-success display-5';
+                resultCard.className = 'card result-card show approved';
+            } else if (percent > 50) {
+                probabilityBar.className = 'progress-bar bg-info';
+                approvalStatus.className = 'text-info display-5';
+                resultCard.className = 'card result-card show';
+            } else if (percent > 25) {
+                probabilityBar.className = 'progress-bar bg-warning';
+                approvalStatus.className = 'text-warning display-5';
+                resultCard.className = 'card result-card show';
+            } else {
+                probabilityBar.className = 'progress-bar bg-danger';
+                approvalStatus.className = 'text-danger display-5';
+                resultCard.className = 'card result-card show rejected';
+            }
+            
+            // Set status message
+            if (probability > 0.65) {
+                approvalStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i>Loan Approved!';
+            } else if (probability > 0.35) {
+                approvalStatus.innerHTML = '<i class="fas fa-question-circle me-2"></i>Borderline Approval';
+            } else {
+                approvalStatus.innerHTML = '<i class="fas fa-times-circle me-2"></i>Loan Not Approved';
+            }
+            
+            approvalProbability.textContent = `Probability of Approval: ${percent}%`;
+            
+            // Add celebration effect for high approval
+            if (percent > 80) {
+                resultCard.classList.add('animate__animated', 'animate__tada');
+                setTimeout(() => {
+                    resultCard.classList.remove('animate__animated', 'animate__tada');
+                }, 1000);
+            }
+        }
+
+        function showFeatureImportance(age, income, education, employment, creditScore, loanAmount, existingDebt, modelType) {
+            // Calculate mock feature importance based on inputs
+            const features = [
+                'Credit Score', 
+                'Income', 
+                'Debt-to-Income Ratio', 
+                'Loan Amount', 
+                'Employment Years', 
+                'Education Level',
+                'Age'
+            ];
+            
+            // Base importance values
+            let importanceValues = [
+                creditScore / 850 * 0.35,
+                Math.min(income / 150000, 1) * 0.3,
+                (1 - Math.min(existingDebt / (income || 1) * 5, 1)) * 0.25,
+                (1 - Math.min(loanAmount / (income * 2 || 1), 1)) * 0.2,
+                employment / 30 * 0.15,
+                (education === 'PhD' ? 0.2 : 
+                 education === 'Master' ? 0.15 : 
+                 education === 'Bachelor' ? 0.1 : 0.05),
+                (age < 25 ? 0.05 : 
+                 age > 60 ? 0.1 : 
+                 0.08)
+            ];
+            
+            // Normalize to sum to 1
+            const sum = importanceValues.reduce((a, b) => a + b, 0);
+            importanceValues = importanceValues.map(v => v / sum);
+            
+            // Create chart
+            const ctx = document.createElement('canvas');
+            document.getElementById('importanceChart').innerHTML = '';
+            document.getElementById('importanceChart').appendChild(ctx);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: features,
+                    datasets: [{
+                        label: 'Importance',
+                        data: importanceValues,
+                        backgroundColor: [
+                            'rgba(58, 123, 213, 0.7)',
+                            'rgba(0, 210, 255, 0.7)',
+                            'rgba(56, 239, 125, 0.7)',
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(199, 199, 199, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(58, 123, 213, 1)',
+                            'rgba(0, 210, 255, 1)',
+                            'rgba(56, 239, 125, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(199, 199, 199, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.parsed.x.toFixed(2)} (${Math.round(context.parsed.x * 100)}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Importance Score',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return (value * 100).toFixed(0) + '%';
+                                }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Features',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

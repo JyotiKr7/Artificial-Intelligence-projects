@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISE Movie Recommendation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .lightning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            animation: lightning 4s infinite;
+        }
+
+        @keyframes lightning {
+            0%, 90%, 100% { opacity: 0; }
+            5%, 15% { opacity: 1; }
+        }
+
+        .thunder-text {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            margin: 2rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: thunder 3s ease-in-out infinite;
+        }
+
+        @keyframes thunder {
+            0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(255, 255, 255, 0.5); }
+            50% { transform: scale(1.02); text-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 40px rgba(0, 150, 255, 0.6); }
+        }
+
+        .rise-title {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .user-card {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(78, 205, 196, 0.2));
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .user-card:hover {
+            border-color: #4ecdc4;
+            transform: scale(1.05);
+        }
+
+        .user-card.selected {
+            border-color: #ff6b6b;
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.4), rgba(78, 205, 196, 0.4));
+        }
+
+        .recommendations {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .movie-card {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8));
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .movie-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .movie-card:hover::before {
+            left: 100%;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-10px);
+            border-color: #4ecdc4;
+        }
+
+        .movie-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #4ecdc4;
+        }
+
+        .movie-genre {
+            color: #96ceb4;
+            margin-bottom: 1rem;
+        }
+
+        .similarity-score {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .algorithm-info {
+            background: rgba(0, 150, 255, 0.1);
+            border-left: 4px solid #4ecdc4;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+        }
+
+        .contact-info {
+            color: #4ecdc4;
+            font-weight: bold;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(69, 183, 209, 0.2), rgba(150, 206, 180, 0.2));
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+
+        @media (max-width: 768px) {
+            .rise-title {
+                font-size: 2.5rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .recommendations {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="lightning"></div>
+    
+    <div class="thunder-text">
+        <h1 class="rise-title">RISE</h1>
+        <p style="font-size: 1.5rem; margin-bottom: 1rem;">Movie Recommendation System</p>
+        <p style="color: #96ceb4;">Bollywood Movie Recommendation Engine</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2 style="color: #4ecdc4; margin-bottom: 1rem;">🎬 Select a User Profile</h2>
+            <div class="user-selection" id="userSelection">
+                <!-- User cards will be populated by JavaScript -->
+            </div>
+            <button class="btn" onclick="getRecommendations()">Get Personalized Recommendations</button>
+        </div>
+
+        <div class="card">
+            <div class="algorithm-info">
+                <h3 style="color: #4ecdc4;">🧠 Algorithm Information</h3>
+                <p><strong>Method:</strong> <span id="currentMethod">User-Based Collaborative Filtering</span></p>
+                <p><strong>Similarity Metric:</strong> Cosine Similarity</p>
+                <p><strong>Recommendation Strategy:</strong> Find similar users and recommend their highly-rated movies</p>
+                <button class="btn" onclick="switchAlgorithm()" style="margin-top: 1rem; font-size: 0.9rem; padding: 0.5rem 1rem;">
+                    Switch to <span id="switchText">Item-Based</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="card" id="recommendationsSection" style="display: none;">
+            <h2 style="color: #4ecdc4; margin-bottom: 1rem;">🎯 Personalized Recommendations</h2>
+            <div class="metrics">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalMovies">0</div>
+                    <div>Movies Analyzed</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalUsers">0</div>
+                    <div>Users in System</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avgSimilarity">0%</div>
+                    <div>Avg Similarity</div>
+                </div>
+            </div>
+            <div class="recommendations" id="recommendations">
+                <!-- Recommendations will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="footer">
+            <h3 style="color: #4ecdc4; margin-bottom: 1rem;">Project Information</h3>
+            <p><strong>Developed by:</strong> <span class="contact-info">Jyoti Kumar</span></p>
+            <p><strong>Contact:</strong> <span class="contact-info">jknewcar25@gmail.com</span></p>
+            <p><strong>Technology:</strong> Collaborative Filtering, Cosine Similarity, JavaScript</p>
+            <p style="margin-top: 1rem; color: #96ceb4;">RISE - Revolutionizing Indian Streaming Experience</p>
+        </div>
+    </div>
+
+    <script>
+        // Sample Bollywood movie dataset with ratings
+        const movieData = {
+            users: {
+                'Arjun': { 'Dangal': 5, 'Baahubali 2': 4, '3 Idiots': 5, 'Zindagi Na Milegi Dobara': 4, 'Lagaan': 3, 'Taare Zameen Par': 4 },
+                'Priya': { 'Dangal': 4, 'Baahubali 2': 5, '3 Idiots': 4, 'K.G.F Chapter 2': 5, 'Dilwale Dulhania Le Jayenge': 3, 'Sholay': 5 },
+                'Rohit': { 'War': 5, 'Pathaan': 4, 'Tiger Zinda Hai': 5, 'Sholay': 4, 'Don': 5, 'Baazigar': 4 },
+                'Kavya': { 'Queen': 4, 'English Vinglish': 5, 'Dilwale Dulhania Le Jayenge': 5, 'Yeh Jawaani Hai Deewani': 4, 'Jab We Met': 4, 'Mughal-E-Azam': 5 },
+                'Vikram': { 'Dangal': 3, 'Baahubali 2': 4, 'War': 5, 'K.G.F Chapter 2': 3, '3 Idiots': 4, 'Andhadhun': 5 },
+                'Raj': { 'Lagaan': 5, 'Taare Zameen Par': 4, 'Sholay': 5, 'Mughal-E-Azam': 4, 'Anand': 5, 'Pyaasa': 4 },
+                'Simran': { 'Dilwale Dulhania Le Jayenge': 4, 'Jab We Met': 5, 'Yeh Jawaani Hai Deewani': 5, 'Kabir Singh': 4, 'Aashiqui 2': 5, 'Mughal-E-Azam': 4 },
+                'Karan': { 'Baahubali 2': 5, 'Andhadhun': 4, 'Tumhari Sulu': 5, 'Pink': 4, 'Article 15': 5, 'Dangal': 4 }
+            },
+            movies: {
+                'Dangal': { genre: 'Sports/Drama', year: 2016 },
+                'Baahubali 2': { genre: 'Action/Epic', year: 2017 },
+                '3 Idiots': { genre: 'Comedy/Drama', year: 2009 },
+                'Zindagi Na Milegi Dobara': { genre: 'Adventure/Comedy', year: 2011 },
+                'Lagaan': { genre: 'Sports/Drama', year: 2001 },
+                'Taare Zameen Par': { genre: 'Drama/Family', year: 2007 },
+                'K.G.F Chapter 2': { genre: 'Action/Period', year: 2022 },
+                'Dilwale Dulhania Le Jayenge': { genre: 'Romance/Musical', year: 1995 },
+                'Sholay': { genre: 'Action/Western', year: 1975 },
+                'War': { genre: 'Action/Thriller', year: 2019 },
+                'Pathaan': { genre: 'Action/Spy', year: 2023 },
+                'Tiger Zinda Hai': { genre: 'Action/Thriller', year: 2017 },
+                'Don': { genre: 'Action/Crime', year: 2006 },
+                'Baazigar': { genre: 'Thriller/Romance', year: 1993 },
+                'Queen': { genre: 'Comedy/Drama', year: 2013 },
+                'English Vinglish': { genre: 'Comedy/Drama', year: 2012 },
+                'Yeh Jawaani Hai Deewani': { genre: 'Romance/Comedy', year: 2013 },
+                'Jab We Met': { genre: 'Romance/Comedy', year: 2007 },
+                'Mughal-E-Azam': { genre: 'Romance/Epic', year: 1960 },
+                'Andhadhun': { genre: 'Thriller/Comedy', year: 2018 },
+                'Anand': { genre: 'Drama/Musical', year: 1971 },
+                'Pyaasa': { genre: 'Drama/Musical', year: 1957 },
+                'Kabir Singh': { genre: 'Romance/Drama', year: 2019 },
+                'Aashiqui 2': { genre: 'Romance/Musical', year: 2013 },
+                'Tumhari Sulu': { genre: 'Comedy/Drama', year: 2017 },
+                'Pink': { genre: 'Drama/Thriller', year: 2016 },
+                'Article 15': { genre: 'Crime/Drama', year: 2019 }
+            }
+        };
+
+        let selectedUser = null;
+        let currentAlgorithm = 'user-based'; // 'user-based' or 'item-based'
+
+        // Initialize the app
+        function initializeApp() {
+            populateUserSelection();
+            updateMetrics();
+        }
+
+        function populateUserSelection() {
+            const userSelection = document.getElementById('userSelection');
+            userSelection.innerHTML = '';
+            
+            Object.keys(movieData.users).forEach(user => {
+                const userCard = document.createElement('div');
+                userCard.className = 'user-card';
+                userCard.onclick = () => selectUser(user);
+                
+                const ratings = movieData.users[user];
+                const avgRating = Object.values(ratings).reduce((a, b) => a + b, 0) / Object.values(ratings).length;
+                
+                userCard.innerHTML = `
+                    <h3>${user}</h3>
+                    <p>Movies Rated: ${Object.keys(ratings).length}</p>
+                    <p>Avg Rating: ${avgRating.toFixed(1)}/5</p>
+                    <p style="font-size: 0.9rem; color: #96ceb4;">
+                        Genres: ${getTopGenres(user).join(', ')}
+                    </p>
+                `;
+                
+                userSelection.appendChild(userCard);
+            });
+        }
+
+        function getTopGenres(user) {
+            const userRatings = movieData.users[user];
+            const genreCount = {};
+            
+            Object.keys(userRatings).forEach(movie => {
+                const genre = movieData.movies[movie]?.genre.split('/')[0] || 'Unknown';
+                genreCount[genre] = (genreCount[genre] || 0) + 1;
+            });
+            
+            return Object.entries(genreCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 2)
+                .map(([genre]) => genre);
+        }
+
+        function selectUser(user) {
+            selectedUser = user;
+            document.querySelectorAll('.user-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.target.closest('.user-card').classList.add('selected');
+        }
+
+        // Cosine similarity calculation
+        function cosineSimilarity(vec1, vec2) {
+            const commonMovies = Object.keys(vec1).filter(movie => movie in vec2);
+            
+            if (commonMovies.length === 0) return 0;
+            
+            let dotProduct = 0;
+            let norm1 = 0;
+            let norm2 = 0;
+            
+            commonMovies.forEach(movie => {
+                dotProduct += vec1[movie] * vec2[movie];
+                norm1 += vec1[movie] * vec1[movie];
+                norm2 += vec2[movie] * vec2[movie];
+            });
+            
+            return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
+        }
+
+        // User-based collaborative filtering
+        function getUserBasedRecommendations(targetUser) {
+            const targetRatings = movieData.users[targetUser];
+            const similarities = {};
+            
+            // Calculate similarities with other users
+            Object.keys(movieData.users).forEach(user => {
+                if (user !== targetUser) {
+                    similarities[user] = cosineSimilarity(targetRatings, movieData.users[user]);
+                }
+            });
+            
+            // Get top similar users
+            const sortedUsers = Object.entries(similarities)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3);
+            
+            // Get movie recommendations
+            const recommendations = {};
+            const watchedMovies = new Set(Object.keys(targetRatings));
+            
+            sortedUsers.forEach(([user, similarity]) => {
+                Object.entries(movieData.users[user]).forEach(([movie, rating]) => {
+                    if (!watchedMovies.has(movie)) {
+                        if (!recommendations[movie]) {
+                            recommendations[movie] = { score: 0, count: 0, users: [] };
+                        }
+                        recommendations[movie].score += rating * similarity;
+                        recommendations[movie].count++;
+                        recommendations[movie].users.push({ user, similarity, rating });
+                    }
+                });
+            });
+            
+            // Normalize and sort recommendations
+            return Object.entries(recommendations)
+                .map(([movie, data]) => ({
+                    movie,
+                    score: data.score / data.count,
+                    confidence: data.count,
+                    users: data.users
+                }))
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 6);
+        }
+
+        // Item-based collaborative filtering
+        function getItemBasedRecommendations(targetUser) {
+            const targetRatings = movieData.users[targetUser];
+            const movieSimilarities = {};
+            
+            // Calculate movie-to-movie similarities
+            const allMovies = Object.keys(movieData.movies);
+            
+            allMovies.forEach(movie1 => {
+                if (movie1 in targetRatings) {
+                    movieSimilarities[movie1] = {};
+                    
+                    allMovies.forEach(movie2 => {
+                        if (movie1 !== movie2 && !(movie2 in targetRatings)) {
+                            // Create rating vectors for movies across all users
+                            const vec1 = {};
+                            const vec2 = {};
+                            
+                            Object.entries(movieData.users).forEach(([user, ratings]) => {
+                                if (movie1 in ratings && movie2 in ratings) {
+                                    vec1[user] = ratings[movie1];
+                                    vec2[user] = ratings[movie2];
+                                }
+                            });
+                            
+                            if (Object.keys(vec1).length > 0) {
+                                movieSimilarities[movie1][movie2] = cosineSimilarity(vec1, vec2);
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Generate recommendations based on item similarities
+            const recommendations = {};
+            
+            Object.entries(targetRatings).forEach(([watchedMovie, rating]) => {
+                if (movieSimilarities[watchedMovie]) {
+                    Object.entries(movieSimilarities[watchedMovie]).forEach(([movie, similarity]) => {
+                        if (similarity > 0) {
+                            if (!recommendations[movie]) {
+                                recommendations[movie] = { score: 0, count: 0 };
+                            }
+                            recommendations[movie].score += rating * similarity;
+                            recommendations[movie].count++;
+                        }
+                    });
+                }
+            });
+            
+            return Object.entries(recommendations)
+                .map(([movie, data]) => ({
+                    movie,
+                    score: data.score / data.count,
+                    confidence: data.count
+                }))
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 6);
+        }
+
+        function getRecommendations() {
+            if (!selectedUser) {
+                alert('Please select a user first!');
+                return;
+            }
+            
+            const recommendations = currentAlgorithm === 'user-based' 
+                ? getUserBasedRecommendations(selectedUser)
+                : getItemBasedRecommendations(selectedUser);
+            
+            displayRecommendations(recommendations);
+        }
+
+        function displayRecommendations(recommendations) {
+            const recommendationsDiv = document.getElementById('recommendations');
+            const section = document.getElementById('recommendationsSection');
+            
+            section.style.display = 'block';
+            recommendationsDiv.innerHTML = '';
+            
+            if (recommendations.length === 0) {
+                recommendationsDiv.innerHTML = '<p>No recommendations available for this user.</p>';
+                return;
+            }
+            
+            recommendations.forEach(rec => {
+                const movieCard = document.createElement('div');
+                movieCard.className = 'movie-card';
+                
+                const movieInfo = movieData.movies[rec.movie];
+                const scorePercentage = Math.round((rec.score / 5) * 100);
+                
+                let additionalInfo = '';
+                if (currentAlgorithm === 'user-based' && rec.users) {
+                    const topUser = rec.users[0];
+                    additionalInfo = `<p style="font-size: 0.9rem; color: #96ceb4;">
+                        Similar to ${topUser.user} (${Math.round(topUser.similarity * 100)}% match)
+                    </p>`;
+                } else {
+                    additionalInfo = `<p style="font-size: 0.9rem; color: #96ceb4;">
+                        Based on ${rec.confidence} similar movies
+                    </p>`;
+                }
+                
+                movieCard.innerHTML = `
+                    <div class="movie-title">${rec.movie}</div>
+                    <div class="movie-genre">${movieInfo.genre} • ${movieInfo.year}</div>
+                    ${additionalInfo}
+                    <div class="similarity-score">Match: ${scorePercentage}%</div>
+                `;
+                
+                recommendationsDiv.appendChild(movieCard);
+            });
+            
+            // Update metrics
+            updateRecommendationMetrics(recommendations);
+        }
+
+        function updateMetrics() {
+            document.getElementById('totalMovies').textContent = Object.keys(movieData.movies).length;
+            document.getElementById('totalUsers').textContent = Object.keys(movieData.users).length;
+        }
+
+        function updateRecommendationMetrics(recommendations) {
+            if (recommendations.length > 0) {
+                const avgSim = recommendations.reduce((sum, rec) => sum + (rec.score / 5), 0) / recommendations.length;
+                document.getElementById('avgSimilarity').textContent = Math.round(avgSim * 100) + '%';
+            }
+        }
+
+        function switchAlgorithm() {
+            currentAlgorithm = currentAlgorithm === 'user-based' ? 'item-based' : 'user-based';
+            
+            const methodText = currentAlgorithm === 'user-based' ? 'User-Based Collaborative Filtering' : 'Item-Based Collaborative Filtering';
+            const switchText = currentAlgorithm === 'user-based' ? 'Item-Based' : 'User-Based';
+            
+            document.getElementById('currentMethod').textContent = methodText;
+            document.getElementById('switchText').textContent = switchText;
+            
+            // If user is selected and recommendations are shown, update them
+            if (selectedUser && document.getElementById('recommendationsSection').style.display !== 'none') {
+                getRecommendations();
+            }
+        }
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>

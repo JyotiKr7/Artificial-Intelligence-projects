@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RISE AI - Emotion Detection System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .code-section {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .demo-section {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .result {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .emotion-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .emotion-happy { background: #28a745; color: white; }
+        .emotion-sad { background: #6c757d; color: white; }
+        .emotion-angry { background: #dc3545; color: white; }
+        .emotion-fear { background: #ffc107; color: black; }
+        .emotion-surprise { background: #17a2b8; color: white; }
+        .emotion-love { background: #e83e8c; color: white; }
+
+        .lightning-effect {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lightning-effect::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: lightning 3s infinite;
+        }
+
+        @keyframes lightning {
+            0% { left: -100%; }
+            50% { left: 100%; }
+            100% { left: 100%; }
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .author-info {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header lightning-effect">
+            <h1>🌟 RISE AI</h1>
+            <p>Emotion Detection from Text - Educational & Mental Health AI</p>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('demo')">Live Demo</button>
+                <button class="tab" onclick="showTab('code')">Complete Code</button>
+                <button class="tab" onclick="showTab('features')">Features</button>
+                <button class="tab" onclick="showTab('integration')">Integration Guide</button>
+            </div>
+
+            <div id="demo" class="tab-content active">
+                <div class="demo-section">
+                    <h2>🎯 Live Emotion Detection Demo</h2>
+                    <div class="input-group">
+                        <label for="textInput">Enter your message:</label>
+                        <textarea id="textInput" rows="4" placeholder="Type your message here... (e.g., 'I'm feeling excited about this new project!')"></textarea>
+                    </div>
+                    <button class="btn" onclick="analyzeEmotion()">Analyze Emotion</button>
+                    <div id="result" class="result" style="display:none;">
+                        <h3>Analysis Result:</h3>
+                        <div id="emotionResult"></div>
+                        <div id="confidenceBar"></div>
+                        <div id="suggestions"></div>
+                    </div>
+                </div>
+
+                <div class="demo-section">
+                    <h3>📊 Batch Analysis Demo</h3>
+                    <div class="input-group">
+                        <label>Sample Student Messages:</label>
+                        <div id="sampleMessages"></div>
+                    </div>
+                    <button class="btn" onclick="analyzeBatch()">Analyze All Messages</button>
+                    <div id="batchResult" style="display:none; margin-top:20px;"></div>
+                </div>
+            </div>
+
+            <div id="code" class="tab-content">
+                <h2>💻 Complete Python Code</h2>
+                <div class="code-section">
+<pre># Emotion Detection from Text - RISE AI Project
+# Author: Jyoti Kumar (jknewcar25@gmail.com)
+# Objective: Classify emotions from text for educational and mental health applications
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+from sklearn.preprocessing import LabelEncoder
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+import re
+import warnings
+from datetime import datetime
+
+warnings.filterwarnings('ignore')
+
+# Download required NLTK data (moved outside class for initial setup)
+# In a real application, you'd run these once during setup, not on every execution
+# print("Checking NLTK data... (This might take a moment the first time)")
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet')
+# print("NLTK data check complete.")
+
+class EmotionDetector:
+    """
+    Emotion Detection System for Educational and Mental Health Applications
+    Supports multiple emotions: happy, sad, angry, fear, surprise, love
+    """
+
+    def __init__(self):
+        self.vectorizer = TfidfVectorizer(max_features=5000, stop_words='english')
+        self.model = None
+        self.label_encoder = LabelEncoder()
+        self.lemmatizer = WordNetLemmatizer()
+        self.stop_words = set(stopwords.words('english'))
+
+    def preprocess_text(self, text):
+        """
+        Comprehensive text preprocessing for emotion detection
+        """
+        # Convert to lowercase
+        text = text.lower()
+
+        # Remove URLs, mentions, hashtags
+        text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+        text = re.sub(r'@\w+|#\w+', '', text)
+
+        # Remove special characters and digits
+        text = re.sub(r'[^a-zA-Z\s]', '', text)
+
+        # Tokenize
+        tokens = word_tokenize(text)
+
+        # Remove stopwords and lemmatize
+        tokens = [self.lemmatizer.lemmatize(token) for token in tokens
+                  if token not in self.stop_words and len(token) > 2]
+
+        return ' '.join(tokens)
+
+    def create_sample_dataset(self):
+        """
+        Create a sample emotion dataset for demonstration
+        In practice, you would load your own labeled dataset
+        """
+        sample_data = {
+            'text': [
+                # Happy emotions
+                "I'm so excited about this new opportunity!",
+                "This is the best day ever, feeling amazing!",
+                "Love spending time with friends and family",
+                "Just got accepted to my dream university!",
+                "Feeling grateful for all the good things in life",
+
+                # Sad emotions
+                "I'm feeling really down today",
+                "This news makes me so sad and disappointed",
+                "Missing my family and feeling lonely",
+                "Failed my exam, feeling devastated",
+                "Everything seems to be going wrong lately",
+
+                # Angry emotions
+                "This is so frustrating, I can't take it anymore!",
+                "I'm furious about this unfair treatment",
+                "Why does this always happen to me? So annoying!",
+                "This makes me really angry and upset",
+                "Fed up with these constant problems",
+
+                # Fear emotions
+                "I'm really scared about the upcoming presentation",
+                "This situation makes me anxious and worried",
+                "Feeling terrified about the future",
+                "I'm afraid I won't be able to handle this",
+                "This uncertainty is making me nervous",
+
+                # Surprise emotions
+                "Wow, I never expected this to happen!",
+                "This is such a shocking revelation",
+                "I'm amazed by this incredible news",
+                "What a surprising turn of events!",
+                "This caught me completely off guard",
+
+                # Love emotions
+                "I absolutely love this new course",
+                "My heart is full of love and joy",
+                "Feeling so much affection for my mentor",
+                "This caring community means everything to me",
+                "I adore working on these projects"
+            ],
+            'emotion': [
+                'happy', 'happy', 'happy', 'happy', 'happy',
+                'sad', 'sad', 'sad', 'sad', 'sad',
+                'angry', 'angry', 'angry', 'angry', 'angry',
+                'fear', 'fear', 'fear', 'fear', 'fear',
+                'surprise', 'surprise', 'surprise', 'surprise', 'surprise',
+                'love', 'love', 'love', 'love', 'love'
+            ]
+        }
+        return pd.DataFrame(sample_data)
+
+    def load_and_prepare_data(self, data_path=None):
+        """
+        Load and prepare the emotion dataset
+        """
+        if data_path:
+            # Load your custom dataset
+            try:
+                df = pd.read_csv(data_path)
+            except FileNotFoundError:
+                # print(f"File {data_path} not found. Using sample dataset.")
+                df = self.create_sample_dataset()
+        else:
+            df = self.create_sample_dataset()
+
+        # print(f"Dataset shape: {df.shape}")
+        # print(f"Emotion distribution:\n{df['emotion'].value_counts()}")
+
+        # Preprocess text
+        df['processed_text'] = df['text'].apply(self.preprocess_text)
+
+        return df
+
+    def train_model(self, df, model_type='logistic'):
+        """
+        Train emotion detection model with multiple algorithm options
+        """
+        # Prepare features and labels
+        X = df['processed_text']
+        y = df['emotion']
+
+        # Encode labels
+        y_encoded = self.label_encoder.fit_transform(y)
+
+        # Split data
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y_encoded, test_size=0.2, random_state=42, stratify=y_encoded
+        )
+
+        # Vectorize text
+        X_train_vec = self.vectorizer.fit_transform(X_train)
+        X_test_vec = self.vectorizer.transform(X_test)
+
+        # Model selection
+        models = {
+            'logistic': LogisticRegression(random_state=42, max_iter=1000),
+            'random_forest': RandomForestClassifier(n_estimators=100, random_state=42),
+            'svm': SVC(kernel='rbf', random_state=42, probability=True),
+            'naive_bayes': MultinomialNB()
+        }
+
+        self.model = models[model_type]
+
+        # Train model
+        # print(f"Training {model_type} model...")
+        self.model.fit(X_train_vec, y_train)
+
+        # Predictions
+        y_pred = self.model.predict(X_test_vec)
+
+        # Evaluation
+        accuracy = accuracy_score(y_test, y_pred)
+        # print(f"\nModel: {model_type.title()}")
+        # print(f"Accuracy: {accuracy:.4f}")
+
+        # Detailed classification report
+        emotion_names = self.label_encoder.classes_
+        # print("\nClassification Report:")
+        # print(classification_report(y_test, y_pred, target_names=emotion_names))
+
+        # Cross-validation
+        cv_scores = cross_val_score(self.model, X_train_vec, y_train, cv=5)
+        # print(f"Cross-validation scores: {cv_scores}")
+        # print(f"Mean CV score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
+
+        return X_test_vec, y_test, y_pred, emotion_names
+
+    def predict_emotion(self, text):
+        """
+        Predict emotion for a single text input
+        """
+        if self.model is None:
+            # Model not trained, train with sample data
+            df = self.load_and_prepare_data()
+            self.train_model(df)
+
+        # Preprocess text
+        processed_text = self.preprocess_text(text)
+
+        # Vectorize
+        text_vec = self.vectorizer.transform([processed_text])
+
+        # Predict
+        prediction = self.model.predict(text_vec)[0]
+        # Check if the model has predict_proba
+        if hasattr(self.model, 'predict_proba'):
+            confidence = self.model.predict_proba(text_vec)[0]
+            max_confidence = max(confidence)
+        else: # For models like SVC without probability=True by default
+            max_confidence = 1.0 # Default to 1.0 if probability not available
+
+        # Get emotion name
+        emotion = self.label_encoder.inverse_transform([prediction])[0]
+
+        return emotion, max_confidence
+
+# Integration classes for LMS
+class EmotionAwareLMS:
+    """
+    Integration example for emotion detection in educational platforms
+    """
+
+    def __init__(self):
+        self.emotion_detector = EmotionDetector()
+        # Train with sample data
+        df = self.emotion_detector.load_and_prepare_data()
+        self.emotion_detector.train_model(df)
+
+    def process_student_message(self, student_id, message):
+        """
+        Process student message and return emotion-aware response
+        """
+        emotion, confidence = self.emotion_detector.predict_emotion(message)
+
+        # Generate appropriate response
+        responses = {
+            'happy': "I'm glad to hear you're feeling positive! How can I help you make the most of this energy?",
+            'sad': "I notice you might be feeling down. Would you like to talk about what's bothering you?",
+            'angry': "It sounds like you're frustrated. Let's work through this step by step.",
+            'fear': "I can sense some anxiety. Remember, it's normal to feel nervous. Let's break this down.",
+            'surprise': "That sounds unexpected! Would you like to share more about what surprised you?",
+            'love': "It's wonderful to hear such enthusiasm! What specifically are you enjoying most?"
+        }
+
+        response = responses.get(emotion, "Thank you for sharing. How can I assist you today?")
+
+        return {
+            'response': response,
+            'detected_emotion': emotion,
+            'confidence': confidence
+        }
+
+# --- Placeholder functions for integration guide for runnable code ---
+# These functions are only for display in the HTML's code section
+# They are not meant to be directly run within the Python script part of this HTML,
+# but demonstrate how you *would* integrate it if running a Python backend.
+def log_emotion_data(student_id, emotion_result):
+    pass # Placeholder
+
+def send_mentor_alert(student_id, emotion_result):
+    pass # Placeholder
+
+def generate_classroom_report(emotions):
+    pass # Placeholder
+
+def create_chatbot_response(user_message, detector):
+    emotion, confidence = detector.predict_emotion(user_message)
+    responses = {
+        'happy': "I'm glad to hear you're feeling positive! How can I help you make the most of this energy?",
+        'sad': "I notice you might be feeling down. Would you like to talk about what's bothering you, or shall we focus on something uplifting?",
+        'angry': "It sounds like you're frustrated. Let's work through this step by step. What's the main issue you're dealing with?",
+        'fear': "I can sense some anxiety in your message. Remember, it's normal to feel nervous. Let's break this down into manageable steps.",
+        'surprise': "That sounds unexpected! Would you like to share more about what surprised you?",
+        'love': "It's wonderful to hear such enthusiasm! What specifically are you enjoying most?"
+    }
+    return responses.get(emotion, "Thank you for sharing. How can I assist you today?")
+
+def generate_mentor_alert_full(student_messages, detector, student_id):
+    predictions = []
+    for msg in student_messages:
+        emotion, confidence = detector.predict_emotion(msg)
+        predictions.append({'emotion': emotion, 'confidence': confidence})
+    negative_emotions = ['sad', 'angry', 'fear']
+    negative_count = sum(1 for p in predictions if p['emotion'] in negative_emotions)
+    if negative_count > len(predictions) * 0.6:
+        return {
+            'alert_level': 'HIGH',
+            'student_id': student_id,
+            'message': 'Student showing consistent negative emotional patterns. Immediate attention recommended.',
+            'recommended_actions': ['Schedule one-on-one meeting', 'Provide additional support resources', 'Consider counseling referral']
+        }
+    elif negative_count > len(predictions) * 0.4:
+        return {
+            'alert_level': 'MODERATE',
+            'student_id': student_id,
+            'message': 'Student showing some emotional distress. Monitor closely.',
+            'recommended_actions': ['Send supportive message', 'Check in during next interaction', 'Provide study resources']
+        }
+    return None
+
+# The `main()` function and `if __name__ == "__main__":` block are typical for Python
+# scripts but are not directly executable within the HTML context for the demo.
+# They are shown for completeness of the Python application.
+# def main():
+#     print("🌟 RISE AI - Emotion Detection System")
+#     print("=" * 50)
+#     detector = EmotionDetector()
+#     df = detector.load_and_prepare_data()
+#     detector.train_model(df, model_type='logistic')
+#     test_messages = [
+#         "I'm struggling with this assignment and feeling overwhelmed",
+#         "Thanks for the helpful feedback, I really appreciate it!",
+#         "This course is so confusing, I don't understand anything",
+#         "I love learning about machine learning, it's fascinating!",
+#         "I'm worried about the upcoming exam"
+#     ]
+#     for msg in test_messages:
+#         emotion, confidence = detector.predict_emotion(msg)
+#         print(f"Message: '{msg}'")
+#         print(f"Predicted Emotion: {emotion.title()} (Confidence: {confidence:.3f})")
+#         print("-" * 60)
+# if __name__ == "__main__":
+#     main()
+# print("\n✅ Emotion Detection System Ready!")
+# print("💡 Contact: jknewcar25@gmail.com for integration support")
+# print("🚀 Perfect for educational platforms like Tamizhan Skills LMS!")
+</pre>
+                </div>
+            </div>
+
+            <div id="features" class="tab-content">
+                <h2>🚀 Features & Capabilities</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3>Multi-Emotion Detection</h3>
+                        <p>Detects 6 core emotions: Happy, Sad, Angry, Fear, Surprise, Love with high accuracy</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🧠</div>
+                        <h3>Advanced ML Models</h3>
+                        <p>Supports Logistic Regression, Random Forest, SVM, and Naive Bayes algorithms</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3>Real-time Analytics</h3>
+                        <p>Provides confidence scores, batch analysis, and emotional trend monitoring</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎓</div>
+                        <h3>Educational Focus</h3>
+                        <p>Designed specifically for student mental health and educational environments</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Lightning Fast</h3>
+                        <p>Optimized for real-time processing with efficient text preprocessing</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔧</div>
+                        <h3>Easy Integration</h3>
+                        <p>Ready-to-use classes for LMS integration with comprehensive documentation</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="integration" class="tab-content">
+                <h2>🔧 Integration Guide for Tamizhan Skills LMS</h2>
+                <div class="code-section">
+<pre># Step 1: Installation
+pip install pandas numpy scikit-learn matplotlib seaborn nltk
+
+# Step 2: Basic Integration
+from emotion_detector import EmotionDetector, EmotionAwareLMS
+
+# Initialize the system (assuming EmotionDetector is trained or self-trains)
+lms = EmotionAwareLMS()
+
+# Step 3: Process student messages
+def handle_student_message(student_id, message):
+    result = lms.process_student_message(student_id, message)
+
+    print(f"Student {student_id}: {message}")
+    print(f"Detected Emotion: {result['detected_emotion']}")
+    print(f"Confidence: {result['confidence']:.3f}")
+    print(f"AI Response: {result['response']}")
+
+    # Log for analytics
+    log_emotion_data(student_id, result)
+
+    # Check if intervention needed
+    if result['detected_emotion'] in ['sad', 'angry', 'fear'] and result['confidence'] > 0.7:
+        send_mentor_alert(student_id, result)
+
+    return result
+
+# Step 4: Batch analysis for classroom insights
+def analyze_classroom_emotions(student_messages_dict): # Renamed to avoid conflict
+    emotions = []
+    for student_id, messages in student_messages_dict.items():
+        for message in messages:
+            emotion, confidence = lms.emotion_detector.predict_emotion(message)
+            emotions.append({
+                'student_id': student_id,
+                'emotion': emotion,
+                'confidence': confidence,
+                'message': message
+            })
+
+    # Generate classroom report
+    generate_classroom_report(emotions)
+
+    return emotions
+
+# Step 5: Database Integration (conceptual)
+def log_emotion_data(student_id, emotion_result):
+    # Your database logging code here
+    # Example:
+    # emotion_log = {
+    #     'student_id': student_id,
+    #     'emotion': emotion_result['detected_emotion'],
+    #     'confidence': emotion_result['confidence'],
+    #     'timestamp': datetime.now(),
+    #     'needs_attention': emotion_result['detected_emotion'] in ['sad', 'angry', 'fear']
+    # }
+    # save_to_database(emotion_log)
+    print(f"[DB Log Mock] Student {student_id} emotion: {emotion_result['detected_emotion']} (Conf: {emotion_result['confidence']:.2f})")
+
+# Step 6: Real-time Monitoring Dashboard (conceptual)
+def create_emotion_dashboard(timeframe='7d'):
+    # Fetch recent emotion data (conceptual)
+    # emotions = fetch_recent_emotions(timeframe)
+
+    # Create visualizations (conceptual)
+    # emotion_trends = analyze_emotion_trends(emotions)
+    # risk_students = identify_at_risk_students(emotions)
+
+    return {
+        'trends': 'mock_trends_data',
+        'alerts': 'mock_alerts_data',
+        'overall_mood': 'mock_overall_mood_data'
+    }
+
+# Placeholder for mentor alert sending
+def send_mentor_alert(student_id, result):
+    print(f"[Mentor Alert Mock] Student {student_id} needs attention! Detected {result['detected_emotion']} (Conf: {result['confidence']:.2f})")
+
+# Placeholder for classroom report generation
+def generate_classroom_report(emotions_list):
+    print(f"[Classroom Report Mock] Generated report for {len(emotions_list)} entries.")
+</pre>
+                </div>
+
+                <h3>🎯 Key Integration Points:</h3>
+                <ul style="margin: 20px 0; padding-left: 30px;">
+                    <li><strong>Chat Integration:</strong> Real-time emotion detection in student messages</li>
+                    <li><strong>Forum Monitoring:</strong> Batch analysis of discussion posts</li>
+                    <li><strong>Assignment Feedback:</strong> Emotion-aware response generation</li>
+                    <li><strong>Mental Health Alerts:</strong> Automated notifications for concerning patterns</li>
+                    <li><strong>Analytics Dashboard:</strong> Emotional wellness tracking for educators</li>
+                </ul>
+
+                <h3>📊 Expected Outcomes:</h3>
+                <ul style="margin: 20px 0; padding-left: 30px;">
+                    <li>Early identification of students needing support</li>
+                    <li>Improved student engagement through emotion-aware responses</li>
+                    <li>Data-driven insights for educational interventions</li>
+                    <li>Enhanced mental health support in educational settings</li>
+                    <li>Personalized learning experiences based on emotional state</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="author-info">
+            <h3>👨‍💻 Project Information</h3>
+            <p><strong>Project:</strong> RISE AI - Emotion Detection System</p>
+            <p><strong>Author:</strong> Jyoti Kumar</p>
+            <p><strong>Contact:</strong> jknewcar25@gmail.com</p>
+            <p><strong>Objective:</strong> Educational AI for mental health and student support</p>
+            <p><strong>Target:</strong> Tamizhan Skills LMS & Educational Platforms</p>
+        </div>
+    </div>
+
+    <script>
+        // Sample emotion detection logic (simplified for demo)
+        // This is a client-side JavaScript demo, not using the Python model directly.
+        // For a full integration, you would send this text to a Python backend via API.
+        const emotionKeywords = {
+            happy: ['happy', 'excited', 'great', 'amazing', 'wonderful', 'love', 'fantastic', 'awesome', 'thrilled', 'delighted', 'joy', 'good'],
+            sad: ['sad', 'depressed', 'down', 'upset', 'disappointed', 'devastated', 'miserable', 'heartbroken', 'lonely', 'gloomy', 'unhappy', 'bad'],
+            angry: ['angry', 'furious', 'frustrated', 'annoyed', 'mad', 'irritated', 'pissed', 'rage', 'hate'],
+            fear: ['scared', 'anxious', 'worried', 'nervous', 'terrified', 'afraid', 'apprehensive', 'dread'],
+            surprise: ['wow', 'unexpected', 'shocking', 'amazing', 'surprised', 'astonished', 'incredible', 'unbelievable'],
+            love: ['love', 'adore', 'affection', 'caring', 'cherish', 'fond', 'appreciate', 'enjoy']
+        };
+
+        const emotionColors = {
+            happy: 'emotion-happy',
+            sad: 'emotion-sad',
+            angry: 'emotion-angry',
+            fear: 'emotion-fear',
+            surprise: 'emotion-surprise',
+            love: 'emotion-love'
+        };
+
+        const emotionSuggestions = {
+            happy: "Great! Keep up the positive energy. What's going well?",
+            sad: "It sounds like you're going through a tough time. Remember, it's okay to ask for help. Consider reaching out to a friend, family, or a counselor.",
+            angry: "Feeling angry is normal. Try to take a deep breath and identify the root cause. Sometimes talking it out helps.",
+            fear: "It's natural to feel fear or anxiety. Focus on what you can control and take small steps. If it persists, consider seeking support.",
+            surprise: "That's unexpected! How does this surprise make you feel? Is it a good or challenging surprise?",
+            love: "It's wonderful to feel love and appreciation. Cherish these moments and connections!"
+        };
+
+        function analyzeEmotion() {
+            const textInput = document.getElementById('textInput').value.toLowerCase();
+            const emotionResultDiv = document.getElementById('emotionResult');
+            const confidenceBarDiv = document.getElementById('confidenceBar');
+            const suggestionsDiv = document.getElementById('suggestions');
+            const resultSection = document.getElementById('result');
+
+            let detectedEmotion = 'neutral'; // Default to neutral
+            let maxScore = 0;
+
+            for (const emotion in emotionKeywords) {
+                let score = 0;
+                emotionKeywords[emotion].forEach(keyword => {
+                    if (textInput.includes(keyword)) {
+                        score += 1;
+                    }
+                });
+
+                if (score > maxScore) {
+                    maxScore = score;
+                    detectedEmotion = emotion;
+                } else if (score === maxScore && score > 0) {
+                    // If scores are tied, prioritize specific common emotions (can be customized)
+                    if (emotion === 'sad' || emotion === 'angry') { // Prioritize negative if tied
+                         detectedEmotion = emotion;
+                    }
+                }
+            }
+
+            // Simple confidence estimation based on keyword count
+            let confidence = Math.min(1, maxScore / 3); // Max confidence at 3 keywords or more
+            if (maxScore === 0) confidence = 0.5; // Default confidence for neutral
+
+            if (detectedEmotion === 'neutral' && maxScore === 0) {
+                 emotionResultDiv.innerHTML = `<span class="emotion-badge" style="background:#888; color:white;">Neutral</span>`;
+                 suggestionsDiv.innerHTML = `<p>Thank you for sharing. How can I assist you today?</p>`;
+                 confidence = 0.6; // Assign a higher default confidence for neutral
+            } else {
+                 emotionResultDiv.innerHTML = `<span class="emotion-badge ${emotionColors[detectedEmotion]}">${detectedEmotion.charAt(0).toUpperCase() + detectedEmotion.slice(1)}</span> (Confidence: ${(confidence * 100).toFixed(1)}%)`;
+                 suggestionsDiv.innerHTML = `<p>${emotionSuggestions[detectedEmotion]}</p>`;
+            }
+
+
+            confidenceBarDiv.innerHTML = `<div class="progress-bar"><div class="progress-fill" style="width: ${confidence * 100}%;"></div></div>`;
+            resultSection.style.display = 'block';
+        }
+
+        const sampleBatchMessages = [
+            { id: 'S001', msg: "I'm really struggling with the math homework. It's so confusing." },
+            { id: 'S002', msg: "Just got my test results back, feeling ecstatic!" },
+            { id: 'S003', msg: "This group project is a mess, I'm so angry about the lack of effort from others." },
+            { id: 'S004', msg: "I'm a bit nervous about the presentation tomorrow." },
+            { id: 'S005', msg: "Wow, the professor announced an extra credit opportunity! That's a nice surprise." },
+            { id: 'S006', msg: "I truly love learning about history." },
+            { id: 'S007', msg: "Feeling down after that failed quiz." },
+            { id: 'S008', msg: "This curriculum is amazing, I'm so happy with it!" }
+        ];
+
+        function populateSampleMessages() {
+            const sampleMessagesDiv = document.getElementById('sampleMessages');
+            sampleMessagesDiv.innerHTML = '';
+            sampleBatchMessages.forEach((item, index) => {
+                const p = document.createElement('p');
+                p.textContent = `Student ${item.id}: "${item.msg}"`;
+                sampleMessagesDiv.appendChild(p);
+            });
+        }
+
+        function analyzeBatch() {
+            const batchResultDiv = document.getElementById('batchResult');
+            batchResultDiv.innerHTML = '<h3>Batch Analysis Results:</h3>';
+            let overallMoodScore = 0;
+            const moodFactors = { happy: 2, love: 2, surprise: 1, neutral: 0, fear: -1, sad: -2, angry: -2 };
+            let totalMessages = 0;
+
+            sampleBatchMessages.forEach(item => {
+                totalMessages++;
+                const textInput = item.msg.toLowerCase();
+                let detectedEmotion = 'neutral';
+                let maxScore = 0;
+
+                for (const emotion in emotionKeywords) {
+                    let score = 0;
+                    emotionKeywords[emotion].forEach(keyword => {
+                        if (textInput.includes(keyword)) {
+                            score += 1;
+                        }
+                    });
+
+                    if (score > maxScore) {
+                        maxScore = score;
+                        detectedEmotion = emotion;
+                    } else if (score === maxScore && score > 0) {
+                        if (emotion === 'sad' || emotion === 'angry') {
+                            detectedEmotion = emotion;
+                        }
+                    }
+                }
+                if (maxScore === 0) detectedEmotion = 'neutral'; // Ensure neutral if no keywords
+
+                // Calculate overall mood score
+                overallMoodScore += moodFactors[detectedEmotion];
+
+                const p = document.createElement('p');
+                let confidence = Math.min(1, maxScore / 3);
+                if (maxScore === 0) confidence = 0.5;
+
+                p.innerHTML = `Student ${item.id}: "${item.msg}" -> Detected: <span class="emotion-badge ${emotionColors[detectedEmotion]}">${detectedEmotion.charAt(0).toUpperCase() + detectedEmotion.slice(1)}</span> (Confidence: ${(confidence * 100).toFixed(1)}%)`;
+                batchResultDiv.appendChild(p);
+            });
+
+            const avgMood = overallMoodScore / totalMessages;
+            let moodSummary = "Overall classroom mood: ";
+            if (avgMood >= 1) {
+                moodSummary += "Very Positive 😊";
+            } else if (avgMood > 0) {
+                moodSummary += "Positive 🙂";
+            } else if (avgMood === 0) {
+                moodSummary += "Neutral 😐";
+            } else if (avgMood < 0 && avgMood >= -1) {
+                moodSummary += "Slightly Negative 🙁";
+            } else {
+                moodSummary += "Significantly Negative 😟";
+            }
+
+            const moodP = document.createElement('p');
+            moodP.style.fontWeight = 'bold';
+            moodP.style.marginTop = '15px';
+            moodP.innerHTML = moodSummary;
+            batchResultDiv.appendChild(moodP);
+
+
+            batchResultDiv.style.display = 'block';
+        }
+
+
+        function showTab(tabId) {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            if (tabId === 'demo') {
+                populateSampleMessages(); // Populate messages when demo tab is shown
+            }
+        }
+
+        // Initialize with demo tab active and populate sample messages
+        document.addEventListener('DOMContentLoaded', () => {
+            showTab('demo');
+        });
+    </script>
+</body>
+</html>
